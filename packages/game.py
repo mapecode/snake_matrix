@@ -1,12 +1,4 @@
-import copy
-
-movements = {
-    # name: (i operation, j operation)
-    'Left' : (0, -1),
-    'Right' : (0, +1),
-    'Down' : (+1, 0),
-    'Up' : (-1, 0)
-} 
+import copy 
 
 class Game:
     board : list
@@ -14,6 +6,13 @@ class Game:
     depth : int
     board_matrix : list # board[0] x board[1]
     n_paths : int
+    movements : dict = {
+        # name: (i operation, j operation)
+        'Left' : (0, -1),
+        'Right' : (0, +1),
+        'Down' : (+1, 0),
+        'Up' : (-1, 0)
+    }
 
     def __init__(self, board : list, snake: list, depth : int) -> None:
         self.board = board
@@ -68,11 +67,10 @@ class Game:
 
             return (i, j)
 
-
-    def apply_movement(self, board_matrix, movement_id, head, tail):
+    def __apply_movement(self, board_matrix, movement_id, head, tail):
         new_board_matrix : list = copy.deepcopy(board_matrix)
         # create head movement
-        movement : tuple = (head[0] + movements[movement_id][0], head[1] + movements[movement_id][1])
+        movement : tuple = (head[0] + self.movements[movement_id][0], head[1] + self.movements[movement_id][1])
 
         # apply head movement
         new_board_matrix[movement[0]][movement[1]] = 1
@@ -80,7 +78,7 @@ class Game:
         # apply tail movement
         new_board_matrix[tail[0]][tail[1]] = 0
 
-        # apply rest movements
+        # apply rest self.movements
         for x in range(1, len(self.snake)):
             index : int = self.__index_of_pos(board_matrix, x)
 
@@ -88,7 +86,7 @@ class Game:
 
         return new_board_matrix
 
-    def check_movement(self, board_matrix, head, movement_index):
+    def __check_movement(self, board_matrix, head, movement_index):
         i : int = head[0] + movement_index[0]
         j : int = head[1] + movement_index[1]
 
@@ -100,14 +98,14 @@ class Game:
     def search_paths(self, stage=0, board_matrix=None):
         if board_matrix == None:
             assert(len(self.board_matrix) != 0)
-            board_matrix = self.board_matrix
+            board_matrix : list = self.board_matrix
 
         if stage == self.depth:
             self.n_paths += 1
         else:
-            for movement_id, movement_index in movements.items():
-                if(self.check_movement(board_matrix, self.__index_of_pos(board_matrix, 1), movement_index) == True):
-                    new_board_matrix = self.apply_movement(board_matrix=board_matrix, movement_id=movement_id, head=self.__index_of_pos(board_matrix, 1), tail=self.__index_of_pos(board_matrix, len(self.snake)))
+            for movement_id, movement_index in self.movements.items():
+                if(self.__check_movement(board_matrix, self.__index_of_pos(board_matrix, 1), movement_index) == True):
+                    new_board_matrix = self.__apply_movement(board_matrix=board_matrix, movement_id=movement_id, head=self.__index_of_pos(board_matrix, 1), tail=self.__index_of_pos(board_matrix, len(self.snake)))
                     self.search_paths(board_matrix=new_board_matrix, stage=stage+1)
 
 
